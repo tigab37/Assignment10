@@ -22,13 +22,13 @@ class Cell {
   }
 
   // adds neighbors for the initialization
-//adds neighbors for the initialization
- void addNeighbor(Cell c) {
-   if (this.color.equals(c.color)) {
-     this.neighbors.add(c);
-     c.neighbors.add(this);
-   }
- }
+  // adds neighbors for the initialization
+  void addNeighbor(Cell c) {
+    if (this.color.equals(c.color)) {
+      this.neighbors.add(c);
+      c.neighbors.add(this);
+    }
+  }
 }
 
 // main class for Flood It game
@@ -95,7 +95,7 @@ class BridgItWorld extends World {
       }
     }
   }
-  
+
   // edits the neighbors of a cell
   void editNeighbors(int column, int row) {
     if (column > 0) {
@@ -136,12 +136,15 @@ class BridgItWorld extends World {
     w.placeImageXY(new OverlayImage(playerTurn, turnBG), this.boardLength / 2,
         this.boardLength + this.CELL_SIZE);
 
-    /*
-     * if (this.gameWon()) { return this.lastScene("YOU WON!", w); } if
-     * (this.gameLost()) { return this.lastScene("YOU LOST!", w); } else { return w;
-     * }
-     */
-    return w;
+    if (this.p1Won()) {
+      return this.lastScene("PLAYER 1 WON!", w);
+    }
+    if (this.p2Won()) {
+      return this.lastScene("PLAYER 2 WON!", w);
+    }
+    else {
+      return w;
+    }
   }
 
   // updates the flooding and draws the scene
@@ -155,15 +158,15 @@ class BridgItWorld extends World {
       this.initialize();
     }
   }
-  
-//check which cell (if any) is clicked
+
+  // check which cell (if any) is clicked
   public void onMouseClicked(Posn pos) {
     int column = (pos.x / this.CELL_SIZE);
     int row = (pos.y / this.CELL_SIZE);
     int cap = this.boardSize - 1;
 
-    if (this.board.get(column).get(row).color.equals(Color.WHITE) 
-        && column != 0 && row != 0 && column != cap && row != cap) {
+    if (this.board.get(column).get(row).color.equals(Color.WHITE) && column != 0 && row != 0
+        && column != cap && row != cap) {
       if (this.turn) {
         this.board.get(column).get(row).color = this.p1Color;
       }
@@ -177,10 +180,70 @@ class BridgItWorld extends World {
     }
   }
 
+  // did player 1 win?
+  boolean p1Won() {
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    boolean win = false;
+    for (Cell a : this.board.get(0)) {
+      if (a.color.equals(this.p1Color)) {
+        this.wonHelp(a, reached);
+      }
+      for (Cell c : this.board.get(this.boardSize - 1)) {
+        if (c.color.equals(this.p1Color)) {
+          win = win || reached.contains(c);
+        }
+      }
+
+      if (win) {
+        return win;
+      }
+      else {
+        reached.clear();
+      }
+    }
+
+    return false;
+  }
+
+  // did player 2 win?
+  boolean p2Won() {
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    boolean win = false;
+    for (int i = 0; i < this.boardSize; i++) {
+      if (this.board.get(i).get(0).color.equals(this.p2Color)) {
+        this.wonHelp(this.board.get(i).get(0), reached);
+      }
+      for (int j = 0; j < this.boardSize; j++) {
+        if (this.board.get(j).get(this.boardSize - 1).color.equals(this.p2Color)) {
+          win = win || reached.contains(this.board.get(j).get(this.boardSize - 1));
+        }
+      }
+
+      if (win) {
+        return win;
+      }
+      else {
+        reached.clear();
+      }
+    }
+
+    return false;
+  }
+
+  // helper function to determine if player 1 won
+  void wonHelp(Cell start, ArrayList<Cell> reached) {
+    for (Cell c : start.neighbors) {
+      if (!reached.contains(c)) {
+        reached.add(c);
+        this.wonHelp(c, reached);
+      }
+    }
+  }
+
   // displays the final scene of the game with text overlayed indicating
-  // whether the player won or lost
+  // which player won (not fully functional yet)
   public WorldScene lastScene(String s, WorldScene endScene) {
-    endScene.placeImageXY(new TextImage(s, 80, Color.BLACK), this.boardLength / 2,
+    endScene.placeImageXY(new TextImage(s, this.boardLength / 10, Color.BLACK), this.boardLength / 2,
         this.boardLength / 2);
     return endScene;
   }
@@ -207,7 +270,7 @@ class ExamplesBridgIt {
 
   // displays the game
   void test(Tester t) {
-    this.w.initialize();
+    this.initData();
     this.w.bigBang(this.w.boardLength, this.w.boardHeight);
   }
 
@@ -238,7 +301,7 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
     t.checkExpect(this.w.turn, true);
   }
-  
+
   void testOnMouseClicked(Tester t) {
     this.initData();
     // ------------ Checking red switch on click ------------
@@ -373,6 +436,5 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 1);
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
   }
-  
 
 }
