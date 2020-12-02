@@ -295,6 +295,45 @@ class ExamplesBridgIt {
   
   void testEditNeighbors(Tester t) {
     this.initData();
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  W  B
+    //  3  R  W  R  W
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(2).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(0).get(3).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(3).color, Color.RED);
+    this.w.board.get(0).get(2).color = Color.RED;
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  R  B  W  B
+    //  3  R  W  R  W
+    this.w.editNeighbors(0,2);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(2).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(0).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(3).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(0).get(3).color, Color.RED);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
+    this.w.board.get(1).get(1).color = Color.RED;
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  R  R  W
+    //  2  R  B  W  B
+    //  3  R  W  R  W
+    this.w.editNeighbors(1,1);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
   }
   
 
