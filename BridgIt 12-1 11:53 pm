@@ -139,6 +139,9 @@ class BridgItWorld extends World {
     if (this.p1Won()) {
       return this.lastScene("PLAYER 1 WON!", w);
     }
+    if (this.p2Won()) {
+      return this.lastScene("PLAYER 2 WON!", w);
+    }
     else {
       return w;
     }
@@ -160,8 +163,10 @@ class BridgItWorld extends World {
   public void onMouseClicked(Posn pos) {
     int column = (pos.x / this.CELL_SIZE);
     int row = (pos.y / this.CELL_SIZE);
+    int cap = this.boardSize - 1;
 
-    if (this.board.get(column).get(row).color.equals(Color.WHITE)) {
+    if (this.board.get(column).get(row).color.equals(Color.WHITE) && column != 0 && row != 0
+        && column != cap && row != cap) {
       if (this.turn) {
         this.board.get(column).get(row).color = this.p1Color;
       }
@@ -181,7 +186,7 @@ class BridgItWorld extends World {
     boolean win = false;
     for (Cell a : this.board.get(0)) {
       if (a.color.equals(this.p1Color)) {
-        this.p1WonHelp(a, reached);
+        this.wonHelp(a, reached);
       }
       for (Cell c : this.board.get(this.boardSize - 1)) {
         if (c.color.equals(this.p1Color)) {
@@ -200,12 +205,37 @@ class BridgItWorld extends World {
     return false;
   }
 
+  // did player 2 win?
+  boolean p2Won() {
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    boolean win = false;
+    for (int i = 0; i < this.boardSize; i++) {
+      if (this.board.get(i).get(0).color.equals(this.p2Color)) {
+        this.wonHelp(this.board.get(i).get(0), reached);
+      }
+      for (int j = 0; j < this.boardSize; j++) {
+        if (this.board.get(j).get(this.boardSize - 1).color.equals(this.p2Color)) {
+          win = win || reached.contains(this.board.get(j).get(this.boardSize - 1));
+        }
+      }
+
+      if (win) {
+        return win;
+      }
+      else {
+        reached.clear();
+      }
+    }
+
+    return false;
+  }
+
   // helper function to determine if player 1 won
-  void p1WonHelp(Cell start, ArrayList<Cell> reached) {
+  void wonHelp(Cell start, ArrayList<Cell> reached) {
     for (Cell c : start.neighbors) {
       if (!reached.contains(c)) {
         reached.add(c);
-        this.p1WonHelp(c, reached);
+        this.wonHelp(c, reached);
       }
     }
   }
@@ -213,7 +243,7 @@ class BridgItWorld extends World {
   // displays the final scene of the game with text overlayed indicating
   // which player won (not fully functional yet)
   public WorldScene lastScene(String s, WorldScene endScene) {
-    endScene.placeImageXY(new TextImage(s, 30, Color.BLACK), this.boardLength / 2,
+    endScene.placeImageXY(new TextImage(s, this.boardSize / 10, Color.BLACK), this.boardLength / 2,
         this.boardLength / 2);
     return endScene;
   }
@@ -240,7 +270,7 @@ class ExamplesBridgIt {
 
   // displays the game
   void test(Tester t) {
-    this.w.initialize();
+    this.initData();
     this.w.bigBang(this.w.boardLength, this.w.boardHeight);
   }
 
