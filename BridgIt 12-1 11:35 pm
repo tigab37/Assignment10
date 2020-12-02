@@ -22,6 +22,7 @@ class Cell {
   }
 
   // adds neighbors for the initialization
+  // adds neighbors for the initialization
   void addNeighbor(Cell c) {
     if (this.color.equals(c.color)) {
       this.neighbors.add(c);
@@ -85,18 +86,29 @@ class BridgItWorld extends World {
 
         this.board.get(col).add(newCell);
 
-        this.editNeighbors(col, i);
+        if (col > 0) {
+          this.board.get(col).get(i).addNeighbor(this.board.get(col - 1).get(i));
+        }
+        if (i > 0) {
+          this.board.get(col).get(i).addNeighbor(this.board.get(col).get(i - 1));
+        }
       }
     }
   }
-  
+
   // edits the neighbors of a cell
   void editNeighbors(int column, int row) {
     if (column > 0) {
       this.board.get(column).get(row).addNeighbor(this.board.get(column - 1).get(row));
     }
+    if (column < this.boardSize - 1) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column + 1).get(row));
+    }
     if (row > 0) {
       this.board.get(column).get(row).addNeighbor(this.board.get(column).get(row - 1));
+    }
+    if (row < this.boardSize - 1) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column).get(row + 1));
     }
   }
 
@@ -124,12 +136,12 @@ class BridgItWorld extends World {
     w.placeImageXY(new OverlayImage(playerTurn, turnBG), this.boardLength / 2,
         this.boardLength + this.CELL_SIZE);
 
-    /*
-     * if (this.gameWon()) { return this.lastScene("YOU WON!", w); } if
-     * (this.gameLost()) { return this.lastScene("YOU LOST!", w); } else { return w;
-     * }
-     */
-    return w;
+    if (this.p1Won()) {
+      return this.lastScene("PLAYER 1 WON!", w);
+    }
+    else {
+      return w;
+    }
   }
 
   // updates the flooding and draws the scene
@@ -156,32 +168,52 @@ class BridgItWorld extends World {
       else {
         this.board.get(column).get(row).color = this.p2Color;
       }
-      
+
       this.editNeighbors(column, row);
-      
+
       this.turn = !this.turn;
     }
   }
 
-  public boolean won(Color c) {
-    
+  // did player 1 win?
+  boolean p1Won() {
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    boolean win = false;
+    for (Cell a : this.board.get(0)) {
+      if (a.color.equals(this.p1Color)) {
+        this.p1WonHelp(a, reached);
+      }
+      for (Cell c : this.board.get(this.boardSize - 1)) {
+        if (c.color.equals(this.p1Color)) {
+          win = win || reached.contains(c);
+        }
+      }
+
+      if (win) {
+        return win;
+      }
+      else {
+        reached.clear();
+      }
+    }
+
+    return false;
   }
-  /*
-   * 
-   * // returns true if player exceeds allotted number of clicks public boolean
-   * gameLost() { return this.clicks >= this.CLICK_MAX; }
-   * 
-   * // returns true if all cells have flooded = true // this returns true usually
-   * before the flooding is finished - we kept it this // way because we like the
-   * mid-waterfall end screen it gives public boolean gameWon() { boolean result =
-   * true; for (ArrayList<Cell> col : this.board) { for (Cell c : col) { result =
-   * c.flooded && result; } } return result; }
-   */
+
+  // helper function to determine if player 1 won
+  void p1WonHelp(Cell start, ArrayList<Cell> reached) {
+    for (Cell c : start.neighbors) {
+      if (!reached.contains(c)) {
+        reached.add(c);
+        this.p1WonHelp(c, reached);
+      }
+    }
+  }
 
   // displays the final scene of the game with text overlayed indicating
-  // whether the player won or lost
+  // which player won (not fully functional yet)
   public WorldScene lastScene(String s, WorldScene endScene) {
-    endScene.placeImageXY(new TextImage(s, 80, Color.BLACK), this.boardLength / 2,
+    endScene.placeImageXY(new TextImage(s, 30, Color.BLACK), this.boardLength / 2,
         this.boardLength / 2);
     return endScene;
   }
@@ -239,4 +271,33 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
     t.checkExpect(this.w.turn, true);
   }
+
+  void testOnMouseClicked(Tester t) {
+    this.initData();
+    // (0,0) is white and its p1 turn
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.turn, true);
+    this.w.onMouseClicked(new Posn(1, 1));
+    // (0,0) is now red and its now p2 turn
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onMouseClicked(new Posn(1, 1));
+    // mouse click on turned red square does nothing
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3 / 2, 0));
+    // mouse click on initialized blue square does nothing
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.turn, false);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3 / 2, w.CELL_SIZE * 3 / 2));
+    // mouse click on empty white square turns it blue now and changes turn again
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
+    t.checkExpect(this.w.turn, true);
+  }
+
+  void testAddNeighbor(Tester t) {
+    this.initData();
+  }
+
 }
