@@ -177,23 +177,6 @@ class BridgItWorld extends World {
     }
   }
 
-  /*
-   * // check which cell (if any) is clicked public void onMouseClicked(Posn pos)
-   * { if (this.clicks < this.CLICK_MAX && !this.gameLost() && !this.gameWon()) {
-   * this.clicks++; int column = (pos.x / this.CELL_SIZE); int row = (pos.y /
-   * this.CELL_SIZE); this.floodColor = this.board.get(column).get(row).color;
-   * this.needFlood.add(this.board.get(0).get(0)); } }
-   * 
-   * 
-   * // returns true if player exceeds allotted number of clicks public boolean
-   * gameLost() { return this.clicks >= this.CLICK_MAX; }
-   * 
-   * // returns true if all cells have flooded = true // this returns true usually
-   * before the flooding is finished - we kept it this // way because we like the
-   * mid-waterfall end screen it gives public boolean gameWon() { boolean result =
-   * true; for (ArrayList<Cell> col : this.board) { for (Cell c : col) { result =
-   * c.flooded && result; } } return result; }
-   */
   // displays the final scene of the game with text overlayed indicating
   // whether the player won or lost
   public WorldScene lastScene(String s, WorldScene endScene) {
@@ -255,39 +238,66 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
     t.checkExpect(this.w.turn, true);
   }
-  /*
+  
   void testOnMouseClicked(Tester t) {
     this.initData();
-    // (0,0) is white and has no neighbors and its p1 turn
-    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
-    t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 0);
-    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
+    // ------------ Checking red switch on click ------------
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  W  B
+    //  3  R  W  R  W
+    // (2,2) is white, (2,1) and (2,3) are red, none have any neighbors, p1 turn
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(2).get(2).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(2).get(3).neighbors.size(), 0);
     t.checkExpect(this.w.turn, true);
-    this.w.onMouseClicked(new Posn(1,1));
-    // (0,0) is now red and its now p2 turn
-    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
-    t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 1);
-    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  R  B
+    //  3  R  W  R  W
+    // all now red, (2,1) and (2,3) have 1 neighbor, (2,2) hasa 2 neighbors, p2 turn
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(2).get(2).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(2).get(3).neighbors.size(), 1);
     t.checkExpect(this.w.turn, false);
-    this.w.onMouseClicked(new Posn(1,1));
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
     // mouse click on turned red square does nothing
-    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
     t.checkExpect(this.w.turn, false);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, 0));
-    // mouse click on initialized blue square does nothing
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 7/2));
+    // mouse click on initialized red square does nothing
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    
+    // ------------ Checking blue switch on click ------------
+    
+    // (1,1) is white, (1,0) and (1,2) are blue, none have any neighbors
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
-    t.checkExpect(this.w.turn, false);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(2).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 0);
     this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
-    // mouse click on empty white square turns it blue now and changes turn again
+    // (1,1) now blue and 2 neighbors, (1,0) and (1,2) 1 neighbors, p1 turn
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
-    t.checkExpect(this.w.turn, true);
+    t.checkExpect(this.w.board.get(1).get(2).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 1);
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 1);
+    t.checkExpect(this.w.turn, true);
   }
-  */
+  
   
   void testAddNeighbor(Tester t) {
     this.initData();
