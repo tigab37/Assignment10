@@ -22,10 +22,13 @@ class Cell {
   }
 
   // adds neighbors for the initialization
-  void addNeighbor(Cell c) {
-    this.neighbors.add(c);
-    c.neighbors.add(this);
-  }
+//adds neighbors for the initialization
+ void addNeighbor(Cell c) {
+   if (this.color.equals(c.color)) {
+     this.neighbors.add(c);
+     c.neighbors.add(this);
+   }
+ }
 }
 
 // main class for Flood It game
@@ -92,6 +95,22 @@ class BridgItWorld extends World {
       }
     }
   }
+  
+  // edits the neighbors of a cell
+  void editNeighbors(int column, int row) {
+    if (column > 0) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column - 1).get(row));
+    }
+    if (column < this.boardSize - 1) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column + 1).get(row));
+    }
+    if (row > 0) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column).get(row - 1));
+    }
+    if (row < this.boardSize - 1) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column).get(row + 1));
+    }
+  }
 
   // draws the world
   public WorldScene makeScene() {
@@ -137,11 +156,11 @@ class BridgItWorld extends World {
     }
   }
   
-  // check which cell (if any) is clicked
+//check which cell (if any) is clicked
   public void onMouseClicked(Posn pos) {
     int column = (pos.x / this.CELL_SIZE);
     int row = (pos.y / this.CELL_SIZE);
-    
+
     if (this.board.get(column).get(row).color.equals(Color.WHITE)) {
       if (this.turn) {
         this.board.get(column).get(row).color = this.p1Color;
@@ -149,7 +168,10 @@ class BridgItWorld extends World {
       else {
         this.board.get(column).get(row).color = this.p2Color;
       }
-      this.turn = !turn;
+
+      this.editNeighbors(column, row);
+
+      this.turn = !this.turn;
     }
   }
 
@@ -255,4 +277,10 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
     t.checkExpect(this.w.turn, true);
   }
+  
+  void testAddNeighbor(Tester t) {
+    this.initData();
+  }
+  
+
 }
