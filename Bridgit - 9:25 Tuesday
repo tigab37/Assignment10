@@ -256,8 +256,9 @@ class ExamplesBridgIt {
   
   void testOnMouseClicked(Tester t) {
     this.initData();
-    // (0,0) is white and its p1 turn
+    // (0,0) is white and has no neighbors and its p1 turn
     t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 0);
     t.checkExpect(this.w.turn, true);
     this.w.onMouseClicked(new Posn(1,1));
     // (0,0) is now red and its now p2 turn
@@ -285,12 +286,15 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
     t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
-    this.w.onMouseClicked(new Posn(1,1));
+    this.w.board.get(0).get(0).color = Color.RED;
+    this.w.board.get(0).get(0).addNeighbor(this.w.board.get(0).get(1));
     // now both are red and have 1 neighbor
     t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 1);
-    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
     t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
-    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+  }
+  
+  void testEditNeighbors(Tester t) {
+    this.initData();
   }
   
 
