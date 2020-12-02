@@ -1,0 +1,189 @@
+import java.util.*;
+import tester.*;
+import javalib.impworld.*;
+import java.awt.Color;
+import javalib.worldimages.*;
+
+// Represents a single square of the game area
+class Cell {
+  // In logical coordinates, with the origin at the top-left corner of the screen
+  Posn loc;
+  Color color;
+  // the four adjacent cells to this one (left, top, right, bottom)
+  ArrayList<Cell> neighbors = new ArrayList<>();
+
+  Cell(Posn loc, Color color) {
+    this.loc = loc;
+    this.color = color;
+    this.neighbors = new ArrayList<>();
+  }
+
+  Cell() {
+  }
+
+  // adds neighbors for the initialization
+  void addNeighbor(Cell c) {
+    this.neighbors.add(c);
+    c.neighbors.add(this);
+  }
+}
+
+// main class for Flood It game
+class BridgItWorld extends World {
+  // boardSize changed to a variable field to allow for simpler testing with
+  // smaller board
+  int boardSize = 22;
+  // constant cell size
+  final int CELL_SIZE = 20;
+  final int boardLength = this.boardSize * this.CELL_SIZE;
+  final int boardHeight = this.boardLength + (this.CELL_SIZE * 2);
+  // represents which player's turn it is (true = player 1, false = player 2)
+  boolean turn;
+  // All the cells of the game
+  ArrayList<ArrayList<Cell>> board;
+  // all possible colors of cells
+  Color p1Color = Color.RED;
+  Color p2Color = Color.BLUE;
+
+  BridgItWorld(int boardSize) {
+    if (boardSize < 3 || (boardSize % 2) == 0) {
+      throw new IllegalArgumentException(
+          "Board size must be an odd number greater than or equal to 3.");
+    }
+    else {
+      this.boardSize = boardSize;
+    }
+  }
+
+  // initializes the board for a fresh new game! This resets the clicks, and
+  // provides a new untouched board
+  void initialize() {
+    this.board = new ArrayList<ArrayList<Cell>>(this.boardSize);
+
+    for (int j = 0; j < this.boardSize; j++) {
+      this.board.add(new ArrayList<Cell>());
+    }
+
+    Cell newCell;
+
+    for (int col = 0; col < this.boardSize; col++) {
+      for (int i = 0; i < this.boardSize; i++) {
+        newCell = new Cell(new Posn(this.CELL_SIZE * col, this.CELL_SIZE * i), Color.WHITE);
+        
+        if (col % 2 == 0 && i % 2 == 1) {
+          newCell.color = this.p1Color;
+        }
+        
+        if (col % 2 == 1 && i % 2 == 0) {
+          newCell.color = this.p2Color;
+        }
+        
+        this.board.get(col).add(newCell);
+
+        if (col > 0) {
+          this.board.get(col).get(i).addNeighbor(this.board.get(col - 1).get(i));
+        }
+        if (i > 0) {
+          this.board.get(col).get(i).addNeighbor(this.board.get(col).get(i - 1));
+        }
+      }
+    }
+  }
+
+  // draws the world
+  public WorldScene makeScene() {
+    WorldScene w = new WorldScene(this.boardLength, this.boardLength + (2 * this.CELL_SIZE));
+    WorldImage cellImg;
+
+    for (ArrayList<Cell> column : this.board) {
+      for (Cell c : column) {
+        cellImg = new RectangleImage(this.CELL_SIZE, this.CELL_SIZE, OutlineMode.SOLID, c.color);
+        w.placeImageXY(cellImg, c.loc.x + (this.CELL_SIZE / 2), c.loc.y + (this.CELL_SIZE / 2));
+      }
+    }
+
+    WorldImage turnBG = new RectangleImage(this.boardSize * this.CELL_SIZE, this.CELL_SIZE * 2,
+        OutlineMode.SOLID, Color.WHITE);
+    
+    int playerNum = 1;
+    if (!turn) {
+      playerNum = 2;
+    }
+    WorldImage playerTurn = new TextImage(
+        "Player " + Integer.toString(playerNum) + "'s turn",
+        this.CELL_SIZE, Color.BLACK);
+    w.placeImageXY(new OverlayImage(playerTurn, turnBG), this.boardLength / 2,
+        this.boardLength + this.CELL_SIZE);
+
+    /*
+    if (this.gameWon()) {
+      return this.lastScene("YOU WON!", w);
+    }
+    if (this.gameLost()) {
+      return this.lastScene("YOU LOST!", w);
+    }
+    else {
+      return w;
+    }*/
+    return w;
+  }
+
+  // updates the flooding and draws the scene
+  public void onTick() {
+    this.makeScene();
+  }
+
+  // re-initializes the game if requested by user command "r"
+  public void onKeyEvent(String key) {
+    if (key.equals("r")) {
+      this.initialize();
+    }
+  }
+
+  /*
+  // check which cell (if any) is clicked
+  public void onMouseClicked(Posn pos) {
+    if (this.clicks < this.CLICK_MAX && !this.gameLost() && !this.gameWon()) {
+      this.clicks++;
+      int column = (pos.x / this.CELL_SIZE);
+      int row = (pos.y / this.CELL_SIZE);
+      this.floodColor = this.board.get(column).get(row).color;
+      this.needFlood.add(this.board.get(0).get(0));
+    }
+  }
+
+  
+  // returns true if player exceeds allotted number of clicks
+  public boolean gameLost() {
+    return this.clicks >= this.CLICK_MAX;
+  }
+
+  // returns true if all cells have flooded = true
+  // this returns true usually before the flooding is finished - we kept it this
+  // way because we like the mid-waterfall end screen it gives
+  public boolean gameWon() {
+    boolean result = true;
+    for (ArrayList<Cell> col : this.board) {
+      for (Cell c : col) {
+        result = c.flooded && result;
+      }
+    }
+    return result;
+  }
+*/
+  // displays the final scene of the game with text overlayed indicating
+  // whether the player won or lost
+  public WorldScene lastScene(String s, WorldScene endScene) {
+    endScene.placeImageXY(new TextImage(s, 80, Color.BLACK), this.boardLength / 2,
+        this.boardLength / 2);
+    return endScene;
+  }
+}
+
+// examples and tests
+class ExamplesBridgIt {
+  BridgItWorld w = new BridgItWorld(5);
+  void test(Tester t) {
+    this.w.bigBang(this.w.boardLength, this.w.boardHeight);
+  }
+}
