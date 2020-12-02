@@ -35,8 +35,8 @@ class BridgItWorld extends World {
   int boardSize;
   // constant cell size
   final int CELL_SIZE = 30;
-  int boardLength = this.boardSize * this.CELL_SIZE;
-  int boardHeight = this.boardLength + (this.CELL_SIZE * 2);
+  int boardLength;
+  int boardHeight;
   // represents which player's turn it is (true = player 1, false = player 2)
   boolean turn;
   // All the cells of the game
@@ -52,10 +52,9 @@ class BridgItWorld extends World {
     }
     else {
       this.boardSize = boardSize;
+      this.boardLength = this.boardSize * this.CELL_SIZE;
+      this.boardHeight = this.boardLength + (this.CELL_SIZE * 2);
     }
-    this.boardLength = this.boardSize * this.CELL_SIZE;
-    this.boardHeight = this.boardLength + (this.CELL_SIZE * 2);
-    
   }
 
   // initializes the board for a fresh new game! This resets the clicks, and
@@ -73,15 +72,15 @@ class BridgItWorld extends World {
     for (int col = 0; col < this.boardSize; col++) {
       for (int i = 0; i < this.boardSize; i++) {
         newCell = new Cell(new Posn(this.CELL_SIZE * col, this.CELL_SIZE * i), Color.WHITE);
-        
+
         if (col % 2 == 0 && i % 2 == 1) {
           newCell.color = this.p1Color;
         }
-        
+
         if (col % 2 == 1 && i % 2 == 0) {
           newCell.color = this.p2Color;
         }
-        
+
         this.board.get(col).add(newCell);
 
         if (col > 0) {
@@ -108,27 +107,21 @@ class BridgItWorld extends World {
 
     WorldImage turnBG = new RectangleImage(this.boardSize * this.CELL_SIZE, this.CELL_SIZE * 2,
         OutlineMode.SOLID, Color.WHITE);
-    
+
     int playerNum = 1;
     if (!turn) {
       playerNum = 2;
     }
-    WorldImage playerTurn = new TextImage(
-        "Player " + Integer.toString(playerNum) + "'s turn",
-        this.boardLength/10, Color.BLACK);
+    WorldImage playerTurn = new TextImage("Player " + Integer.toString(playerNum) + "'s turn",
+        this.boardLength / 10, Color.BLACK);
     w.placeImageXY(new OverlayImage(playerTurn, turnBG), this.boardLength / 2,
         this.boardLength + this.CELL_SIZE);
 
     /*
-    if (this.gameWon()) {
-      return this.lastScene("YOU WON!", w);
-    }
-    if (this.gameLost()) {
-      return this.lastScene("YOU LOST!", w);
-    }
-    else {
-      return w;
-    }*/
+     * if (this.gameWon()) { return this.lastScene("YOU WON!", w); } if
+     * (this.gameLost()) { return this.lastScene("YOU LOST!", w); } else { return w;
+     * }
+     */
     return w;
   }
 
@@ -143,38 +136,40 @@ class BridgItWorld extends World {
       this.initialize();
     }
   }
-
-  /*
+  
   // check which cell (if any) is clicked
   public void onMouseClicked(Posn pos) {
-    if (this.clicks < this.CLICK_MAX && !this.gameLost() && !this.gameWon()) {
-      this.clicks++;
-      int column = (pos.x / this.CELL_SIZE);
-      int row = (pos.y / this.CELL_SIZE);
-      this.floodColor = this.board.get(column).get(row).color;
-      this.needFlood.add(this.board.get(0).get(0));
-    }
-  }
-
-  
-  // returns true if player exceeds allotted number of clicks
-  public boolean gameLost() {
-    return this.clicks >= this.CLICK_MAX;
-  }
-
-  // returns true if all cells have flooded = true
-  // this returns true usually before the flooding is finished - we kept it this
-  // way because we like the mid-waterfall end screen it gives
-  public boolean gameWon() {
-    boolean result = true;
-    for (ArrayList<Cell> col : this.board) {
-      for (Cell c : col) {
-        result = c.flooded && result;
+    int column = (pos.x / this.CELL_SIZE);
+    int row = (pos.y / this.CELL_SIZE);
+    
+    if (this.board.get(column).get(row).color.equals(Color.WHITE)) {
+      if (this.turn) {
+        this.board.get(column).get(row).color = this.p1Color;
       }
+      else {
+        this.board.get(column).get(row).color = this.p2Color;
+      }
+      this.turn = !turn;
     }
-    return result;
   }
-*/
+
+  /*
+   * // check which cell (if any) is clicked public void onMouseClicked(Posn pos)
+   * { if (this.clicks < this.CLICK_MAX && !this.gameLost() && !this.gameWon()) {
+   * this.clicks++; int column = (pos.x / this.CELL_SIZE); int row = (pos.y /
+   * this.CELL_SIZE); this.floodColor = this.board.get(column).get(row).color;
+   * this.needFlood.add(this.board.get(0).get(0)); } }
+   * 
+   * 
+   * // returns true if player exceeds allotted number of clicks public boolean
+   * gameLost() { return this.clicks >= this.CLICK_MAX; }
+   * 
+   * // returns true if all cells have flooded = true // this returns true usually
+   * before the flooding is finished - we kept it this // way because we like the
+   * mid-waterfall end screen it gives public boolean gameWon() { boolean result =
+   * true; for (ArrayList<Cell> col : this.board) { for (Cell c : col) { result =
+   * c.flooded && result; } } return result; }
+   */
   // displays the final scene of the game with text overlayed indicating
   // whether the player won or lost
   public WorldScene lastScene(String s, WorldScene endScene) {
@@ -186,21 +181,49 @@ class BridgItWorld extends World {
 
 // examples and tests
 class ExamplesBridgIt {
-  BridgItWorld w = new BridgItWorld(5);
-  
+  BridgItWorld w = new BridgItWorld(21);
+  Posn origin = new Posn(0, 0);
+  Posn x1y0 = new Posn(this.w.CELL_SIZE, 0);
+  Posn x0y1 = new Posn(0, this.w.CELL_SIZE);
+  Cell cellOne = new Cell(this.origin, Color.WHITE);
+  Cell cellTwo = new Cell(this.x0y1, Color.RED);
+  Cell cellThree = new Cell(this.x1y0, Color.BLUE);
+
+  // initialize the data
   void initData() {
     this.w = new BridgItWorld(5);
+    this.w.initialize();
+    cellOne = new Cell(this.origin, Color.WHITE);
+    cellTwo = new Cell(this.x0y1, Color.RED);
+    cellThree = new Cell(this.x1y0, Color.BLUE);
   }
-  
+
+  // displays the game
   void test(Tester t) {
     this.w.initialize();
     this.w.bigBang(this.w.boardLength, this.w.boardHeight);
   }
-  
+
+  // tests the constructor and exceptions for BridgItWorld
+  void testConstructor(Tester t) {
+    this.initData();
+    BridgItWorld w2 = new BridgItWorld(3);
+    w2.initialize();
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 2);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 4);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 20);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 1);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 0);
+  }
+
+  // tests initialize method
   void testInitialize(Tester t) {
     this.initData();
-    this.w = new BridgItWorld(5);
-    this.w.initialize();
     t.checkExpect(this.w.board.size(), 5);
     t.checkExpect(this.w.board.get(0).size(), 5);
     t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
@@ -209,4 +232,27 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.turn, true);
   }
   
+  void testOnMouseClicked(Tester t) {
+    this.initData();
+    // (0,0) is white and its p1 turn
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.turn, true);
+    this.w.onMouseClicked(new Posn(1,1));
+    // (0,0) is now red and its now p2 turn
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onMouseClicked(new Posn(1,1));
+    // mouse click on turned red square does nothing
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, 0));
+    // mouse click on initialized blue square does nothing
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.turn, false);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    // mouse click on empty white square turns it blue now and changes turn again
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
+    t.checkExpect(this.w.turn, true);
+  }
 }
