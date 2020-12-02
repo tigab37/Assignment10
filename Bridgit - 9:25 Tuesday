@@ -279,7 +279,11 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.turn, false);
     
     // ------------ Checking blue switch on click ------------
-    
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  R  B
+    //  3  R  W  R  W
     // (1,1) is white, (1,0) and (1,2) are blue, none have any neighbors
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
@@ -288,6 +292,11 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 0);
     this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  B  R  W
+    //  2  W  B  R  B
+    //  3  R  W  R  W
     // (1,1) now blue and 2 neighbors, (1,0) and (1,2) 1 neighbors, p1 turn
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
@@ -296,6 +305,15 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
     t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 1);
     t.checkExpect(this.w.turn, true);
+    
+    // ------------ Checking no click on edges ------------
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    this.w.onMouseClicked(new Posn(0, 0));
+    t.checkExpect(this.w.turn, true);
+    t.checkExpect(this.w.board.get(4).get(4).color, Color.WHITE);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 9/2, w.CELL_SIZE * 9/2));
+    t.checkExpect(this.w.turn, true);
+    t.checkExpect(this.w.board.get(4).get(4).color, Color.WHITE);
   }
   
   
