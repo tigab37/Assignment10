@@ -259,10 +259,13 @@ class ExamplesBridgIt {
     // (0,0) is white and has no neighbors and its p1 turn
     t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
     t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
     t.checkExpect(this.w.turn, true);
     this.w.onMouseClicked(new Posn(1,1));
     // (0,0) is now red and its now p2 turn
     t.checkExpect(this.w.board.get(0).get(0).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
     t.checkExpect(this.w.turn, false);
     this.w.onMouseClicked(new Posn(1,1));
     // mouse click on turned red square does nothing
@@ -273,10 +276,14 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.turn, false);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
     this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
     // mouse click on empty white square turns it blue now and changes turn again
     t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
     t.checkExpect(this.w.turn, true);
+    t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
   }
   
   void testAddNeighbor(Tester t) {
