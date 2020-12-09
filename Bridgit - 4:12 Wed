@@ -148,6 +148,7 @@ class BridgItWorld extends World {
 
 
   // re-initializes the game if requested by user command "r"
+  // extra feature :)
   public void onKeyEvent(String key) {
     if (key.equals("r")) {
       this.initialize();
@@ -536,6 +537,97 @@ class ExamplesBridgIt {
     this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
     t.checkExpect(this.w.p2Won(), true);
   }
+  
+
+  void testMakeScene(Tester t) {
+    this.initData();
+    //   0 1 2 3 4
+    // 0 W B W B W
+    // 1 R W R W R
+    // 2 W B W B W 
+    // 3 R W R W R
+    // 4 W B W B W
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+
+    WorldScene oldScene = this.w.makeScene();
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // --------------- if edges are clicked --------------
+    // clicking cell (0, 0)...
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE / 2, this.w.CELL_SIZE / 2));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (1, 0)... 
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE / 2));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (0, 1)... 
+    this.w.onMouseClicked(new Posn((this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (4, 4)...
+    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (2, 4)... 
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (4, 3)... 
+    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+
+    // --------------- if middle cells are clicked --------------
+    // clicking cell (2, 1)...
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's red, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (3, 2)...
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's blue, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (1, 1)...
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
+    // ...changes (1, 1) to red, switches player turn to player 2
+    t.checkExpect(this.w.makeScene().equals(oldScene), false);
+    t.checkExpect(this.w.turn, false);
+    oldScene = this.w.makeScene();
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    //   0 1 2 3 4
+    // 0 W B W B W
+    // 1 R R R W R
+    // 2 W B W B W 
+    // 3 R W R W R
+    // 4 W B W B W
+    // clicking cell (2, 1)...
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's red, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, false);
+    // clicking cell (3, 2)...
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's blue, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, false);
+    // clicking cell (3, 3)...
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...changes (3, 3) to blue, switches player turn to player 1
+    t.checkExpect(this.w.makeScene().equals(oldScene), false);
+    t.checkExpect(this.w.turn, true);
+  }
+}
+
   
   
 
