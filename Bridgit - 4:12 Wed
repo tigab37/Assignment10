@@ -146,10 +146,6 @@ class BridgItWorld extends World {
     }
   }
 
-  // updates the flooding and draws the scene
-  public void onTick() {
-    this.makeScene();
-  }
 
   // re-initializes the game if requested by user command "r"
   public void onKeyEvent(String key) {
@@ -177,6 +173,8 @@ class BridgItWorld extends World {
 
       this.turn = !this.turn;
     }
+    
+    this.makeScene();
   }
 
   // did player 1 win?
@@ -299,6 +297,24 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, true);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onKeyEvent("r");
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, true);
+  }
+  
+  void testOnKeyEvent(Tester t) {
+    this.initData();
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
     t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
