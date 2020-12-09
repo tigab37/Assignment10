@@ -1,0 +1,549 @@
+import java.util.*;
+import tester.*;
+import javalib.impworld.*;
+import java.awt.Color;
+import javalib.worldimages.*;
+
+// Represents a single square of the game area
+class Cell {
+  // In logical coordinates, with the origin at the top-left corner of the screen
+  Posn loc;
+  Color color;
+  // the four adjacent cells to this one (left, top, right, bottom) of the same
+  // color
+  ArrayList<Cell> neighbors = new ArrayList<>();
+
+  Cell(Posn loc, Color color) {
+    this.loc = loc;
+    this.color = color;
+    this.neighbors = new ArrayList<>();
+  }
+
+  Cell() {
+  }
+
+  // adds neighbors for the initialization
+  void addNeighbor(Cell c) {
+    if (this.color.equals(c.color)) {
+      this.neighbors.add(c);
+      c.neighbors.add(this);
+    }
+  }
+}
+
+// main class for Flood It game
+class BridgItWorld extends World {
+  // boardSize changed to a variable field to allow for simpler testing with
+  // smaller board
+  int boardSize;
+  // constant cell size
+  final int CELL_SIZE = 30;
+  int boardLength;
+  int boardHeight;
+  // represents which player's turn it is (true = player 1, false = player 2)
+  boolean turn;
+  // All the cells of the game
+  ArrayList<ArrayList<Cell>> board;
+  // all possible colors of cells
+  Color p1Color = Color.RED;
+  Color p2Color = Color.BLUE;
+
+  BridgItWorld(int boardSize) {
+    if (boardSize < 3 || (boardSize % 2) == 0) {
+      throw new IllegalArgumentException(
+          "Board size must be an odd number greater than or equal to 3.");
+    }
+    else {
+      this.boardSize = boardSize;
+      this.boardLength = this.boardSize * this.CELL_SIZE;
+      this.boardHeight = this.boardLength + (this.CELL_SIZE * 2);
+    }
+  }
+
+  // initializes the board for a fresh new game! This resets the clicks, and
+  // provides a new untouched board
+  void initialize() {
+    this.turn = true;
+    this.board = new ArrayList<ArrayList<Cell>>(this.boardSize);
+
+    for (int j = 0; j < this.boardSize; j++) {
+      this.board.add(new ArrayList<Cell>());
+    }
+
+    Cell newCell;
+
+    for (int col = 0; col < this.boardSize; col++) {
+      for (int i = 0; i < this.boardSize; i++) {
+        newCell = new Cell(new Posn(this.CELL_SIZE * col, this.CELL_SIZE * i), Color.WHITE);
+
+        if (col % 2 == 0 && i % 2 == 1) {
+          newCell.color = this.p1Color;
+        }
+
+        if (col % 2 == 1 && i % 2 == 0) {
+          newCell.color = this.p2Color;
+        }
+
+        this.board.get(col).add(newCell);
+
+        if (col > 0) {
+          this.board.get(col).get(i).addNeighbor(this.board.get(col - 1).get(i));
+        }
+        if (i > 0) {
+          this.board.get(col).get(i).addNeighbor(this.board.get(col).get(i - 1));
+        }
+      }
+    }
+  }
+
+  // edits the neighbors of a cell
+  void editNeighbors(int column, int row) {
+    if (column > 0) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column - 1).get(row));
+    }
+    if (column < this.boardSize - 1) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column + 1).get(row));
+    }
+    if (row > 0) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column).get(row - 1));
+    }
+    if (row < this.boardSize - 1) {
+      this.board.get(column).get(row).addNeighbor(this.board.get(column).get(row + 1));
+    }
+  }
+
+  // draws the world
+  public WorldScene makeScene() {
+    WorldScene w = new WorldScene(this.boardLength, this.boardLength + (2 * this.CELL_SIZE));
+    WorldImage cellImg;
+
+    for (ArrayList<Cell> column : this.board) {
+      for (Cell c : column) {
+        cellImg = new RectangleImage(this.CELL_SIZE, this.CELL_SIZE, OutlineMode.SOLID, c.color);
+        w.placeImageXY(cellImg, c.loc.x + (this.CELL_SIZE / 2), c.loc.y + (this.CELL_SIZE / 2));
+      }
+    }
+
+    WorldImage turnBG = new RectangleImage(this.boardSize * this.CELL_SIZE, this.CELL_SIZE * 2,
+        OutlineMode.SOLID, Color.WHITE);
+
+    int playerNum = 1;
+    if (!turn) {
+      playerNum = 2;
+    }
+    WorldImage playerTurn = new TextImage("Player " + Integer.toString(playerNum) + "'s turn",
+        this.boardLength / 10, Color.BLACK);
+    w.placeImageXY(new OverlayImage(playerTurn, turnBG), this.boardLength / 2,
+        this.boardLength + this.CELL_SIZE);
+
+    if (this.p1Won()) {
+      return this.lastScene("PLAYER 1 WON!", w);
+    }
+    if (this.p2Won()) {
+      return this.lastScene("PLAYER 2 WON!", w);
+    }
+    else {
+      return w;
+    }
+  }
+
+  // EXTRA FEATURE :)
+  // re-initializes the game if requested by user command "r"
+  public void onKeyEvent(String key) {
+    if (key.equals("r")) {
+      this.initialize();
+    }
+  }
+
+  // check which cell (if any) is clicked
+  public void onMouseClicked(Posn pos) {
+    int column = (pos.x / this.CELL_SIZE);
+    int row = (pos.y / this.CELL_SIZE);
+    int cap = this.boardSize - 1;
+
+    if (!this.p1Won() && !this.p2Won() && this.board.get(column).get(row).color.equals(Color.WHITE)
+        && column != 0 && row != 0 && column != cap && row != cap) {
+      if (this.turn) {
+        this.board.get(column).get(row).color = this.p1Color;
+      }
+      else {
+        this.board.get(column).get(row).color = this.p2Color;
+      }
+
+      this.editNeighbors(column, row);
+
+      this.turn = !this.turn;
+    }
+
+    this.makeScene();
+  }
+
+  // did player 1 win?
+  boolean p1Won() {
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    boolean win = false;
+    for (Cell a : this.board.get(0)) {
+      if (a.color.equals(this.p1Color)) {
+        this.wonHelp(a, reached);
+      }
+      for (Cell c : this.board.get(this.boardSize - 1)) {
+        if (c.color.equals(this.p1Color)) {
+          win = win || reached.contains(c);
+        }
+      }
+
+      if (win) {
+        return win;
+      }
+      else {
+        reached.clear();
+      }
+    }
+
+    return false;
+  }
+
+  // did player 2 win?
+  boolean p2Won() {
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    boolean win = false;
+    // change to while loop which needs !win and i < this.boardSize();
+    for (int i = 0; i < this.boardSize; i++) {
+      if (this.board.get(i).get(0).color.equals(this.p2Color)) {
+        this.wonHelp(this.board.get(i).get(0), reached);
+      }
+      for (int j = 0; j < this.boardSize; j++) {
+        if (this.board.get(j).get(this.boardSize - 1).color.equals(this.p2Color)) {
+          win = win || reached.contains(this.board.get(j).get(this.boardSize - 1));
+        }
+      }
+
+      if (win) {
+        return win;
+      }
+      else {
+        reached.clear();
+      }
+    }
+
+    return false;
+  }
+
+  // helper function to determine if player 1 won
+  void wonHelp(Cell start, ArrayList<Cell> reached) {
+    for (Cell c : start.neighbors) {
+      if (!reached.contains(c)) {
+        reached.add(c);
+        this.wonHelp(c, reached);
+      }
+    }
+  }
+
+  // displays the final scene of the game with text overlayed indicating
+  // which player won (not fully functional yet)
+  public WorldScene lastScene(String s, WorldScene endScene) {
+    endScene.placeImageXY(new TextImage(s, this.boardLength / 10, Color.BLACK),
+        this.boardLength / 2, this.boardLength / 2);
+    return endScene;
+  }
+}
+
+// examples and tests
+class ExamplesBridgIt {
+  BridgItWorld w = new BridgItWorld(21);
+  Posn origin = new Posn(0, 0);
+  Posn x1y0 = new Posn(this.w.CELL_SIZE, 0);
+  Posn x0y1 = new Posn(0, this.w.CELL_SIZE);
+  Cell cellOne = new Cell(this.origin, Color.WHITE);
+  Cell cellTwo = new Cell(this.x0y1, Color.RED);
+  Cell cellThree = new Cell(this.x1y0, Color.BLUE);
+
+  // initialize the data
+  void initData() {
+    this.w = new BridgItWorld(5); // to play on bigger board, change this value of 5; 5 is used for
+                                  // tests
+    this.w.initialize();
+    cellOne = new Cell(this.origin, Color.WHITE);
+    cellTwo = new Cell(this.x0y1, Color.RED);
+    cellThree = new Cell(this.x1y0, Color.BLUE);
+  }
+
+  // displays the game
+  void test(Tester t) {
+    this.initData();
+    this.w.bigBang(this.w.boardLength, this.w.boardHeight);
+  }
+
+  // tests the constructor and exceptions for BridgItWorld
+  void testConstructor(Tester t) {
+    this.initData();
+    BridgItWorld w2 = new BridgItWorld(3);
+    w2.initialize();
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 2);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 4);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 20);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 1);
+    t.checkConstructorException(new IllegalArgumentException(
+        "Board size must be an odd number greater than or equal to 3."), "BridgItWorld", 0);
+  }
+
+  // tests initialize method
+  void testInitialize(Tester t) {
+    this.initData();
+    t.checkExpect(this.w.board.size(), 5);
+    t.checkExpect(this.w.board.get(0).size(), 5);
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, true);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 5 / 2));
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onKeyEvent("l");
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onKeyEvent("a");
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onKeyEvent("r");
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, true);
+  }
+
+  void testOnMouseClicked(Tester t) {
+    this.initData();
+    // ------------ Checking red switch on click ------------
+    //   0 1 2 3
+    // 0 W B W B
+    // 1 R W R W
+    // 2 W B W B
+    // 3 R W R W
+    // (2,2) is white, (2,1) and (2,3) are red, none have any neighbors, p1 turn
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(2).get(2).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(2).get(3).neighbors.size(), 0);
+    t.checkExpect(this.w.turn, true);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 5 / 2));
+    //   0 1 2 3
+    // 0 W B W B
+    // 1 R W R W
+    // 2 W B R B
+    // 3 R W R W
+    // all now red, (2,1) and (2,3) have 1 neighbor, (2,2) hasa 2 neighbors, p2 turn
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(2).get(2).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(2).get(3).neighbors.size(), 1);
+    t.checkExpect(this.w.turn, false);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 5 / 2));
+    // mouse click on turned red square does nothing
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 7 / 2));
+    // mouse click on initialized red square does nothing
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+
+    // ------------ Checking blue switch on click ------------
+    //   0 1 2 3
+    // 0 W B W B
+    // 1 R W R W
+    // 2 W B R B
+    // 3 R W R W
+    // (1,1) is white, (1,0) and (1,2) are blue, none have any neighbors
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(2).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 0);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3 / 2, w.CELL_SIZE * 3 / 2));
+    //   0 1 2 3
+    // 0 W B W B
+    // 1 R B R W
+    // 2 W B R B
+    // 3 R W R W
+    // (1,1) now blue and 2 neighbors, (1,0) and (1,2) 1 neighbors, p1 turn
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(1).get(2).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 1);
+    t.checkExpect(this.w.turn, true);
+
+    // ------------ Checking no click on edges ------------
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    this.w.onMouseClicked(new Posn(0, 0));
+    t.checkExpect(this.w.turn, true);
+    t.checkExpect(this.w.board.get(4).get(4).color, Color.WHITE);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 9 / 2, w.CELL_SIZE * 9 / 2));
+    t.checkExpect(this.w.turn, true);
+    t.checkExpect(this.w.board.get(4).get(4).color, Color.WHITE);
+  }
+
+  void testAddNeighbor(Tester t) {
+    this.initData();
+    // (0,0) is white and has no neighbors, (0,1) is red and has no neights)
+    t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    this.w.board.get(0).get(0).color = Color.RED;
+    this.w.board.get(0).get(0).addNeighbor(this.w.board.get(0).get(1));
+    // now both are red and have 1 neighbor
+    t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
+  }
+
+  void testEditNeighbors(Tester t) {
+    this.initData();
+    //   0 1 2 3
+    // 0 W B W B
+    // 1 R W R W
+    // 2 W B W B
+    // 3 R W R W
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(2).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(0).get(3).neighbors.size(), 0);
+    t.checkExpect(this.w.board.get(0).get(3).color, Color.RED);
+    this.w.board.get(0).get(2).color = Color.RED;
+    // 0 1 2 3
+    // 0 W B W B
+    // 1 R W R W
+    // 2 W B W B
+    // 3 R W R W
+    this.w.editNeighbors(0, 2);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(2).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(0).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(0).get(3).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(0).get(3).color, Color.RED);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
+    this.w.board.get(1).get(1).color = Color.RED;
+    //   0 1 2 3
+    // 0 W B W B
+    // 1 R R R W
+    // 2 W B W B
+    // 3 R W R W
+    this.w.editNeighbors(1, 1);
+    t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
+    t.checkExpect(this.w.board.get(1).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(1).neighbors.size(), 1);
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+  }
+  
+  void testMakeScene(Tester t) {
+    this.initData();
+    //   0 1 2 3 4
+    // 0 W B W B W
+    // 1 R W R W R
+    // 2 W B W B W 
+    // 3 R W R W R
+    // 4 W B W B W
+    t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
+    t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
+
+    WorldScene oldScene = this.w.makeScene();
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // --------------- if edges are clicked --------------
+    // clicking cell (0, 0)...
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE / 2, this.w.CELL_SIZE / 2));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (1, 0)... 
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE / 2));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (0, 1)... 
+    this.w.onMouseClicked(new Posn((this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (4, 4)...
+    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (2, 4)... 
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (4, 3)... 
+    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...does nothing
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+
+    // --------------- if middle cells are clicked --------------
+    // clicking cell (2, 1)...
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's red, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (3, 2)...
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's blue, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, true);
+    // clicking cell (1, 1)...
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
+    // ...changes (1, 1) to red, switches player turn to player 2
+    t.checkExpect(this.w.makeScene().equals(oldScene), false);
+    t.checkExpect(this.w.turn, false);
+    oldScene = this.w.makeScene();
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    //   0 1 2 3 4
+    // 0 W B W B W
+    // 1 R R R W R
+    // 2 W B W B W 
+    // 3 R W R W R
+    // 4 W B W B W
+    // clicking cell (2, 1)...
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's red, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, false);
+    // clicking cell (3, 2)...
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
+    // ... does nothing because it's blue, not white
+    t.checkExpect(this.w.makeScene().equals(oldScene), true);
+    t.checkExpect(this.w.turn, false);
+    // clicking cell (3, 3)...
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // ...changes (3, 3) to blue, switches player turn to player 1
+    t.checkExpect(this.w.makeScene().equals(oldScene), false);
+    t.checkExpect(this.w.turn, true);
+  }
+}
