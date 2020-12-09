@@ -9,8 +9,7 @@ class Cell {
   // In logical coordinates, with the origin at the top-left corner of the screen
   Posn loc;
   Color color;
-  // the four adjacent cells to this one (left, top, right, bottom) of the same
-  // color
+  // the four adjacent cells to this one (left, top, right, bottom) of the same color
   ArrayList<Cell> neighbors = new ArrayList<>();
 
   Cell(Posn loc, Color color) {
@@ -147,8 +146,9 @@ class BridgItWorld extends World {
     }
   }
 
-  // EXTRA FEATURE :)
+
   // re-initializes the game if requested by user command "r"
+  // extra feature :)
   public void onKeyEvent(String key) {
     if (key.equals("r")) {
       this.initialize();
@@ -161,7 +161,7 @@ class BridgItWorld extends World {
     int row = (pos.y / this.CELL_SIZE);
     int cap = this.boardSize - 1;
 
-    if (!this.p1Won() && !this.p2Won() && this.board.get(column).get(row).color.equals(Color.WHITE)
+    if (!this.p1Won() && !this.p2Won() && this.board.get(column).get(row).color.equals(Color.WHITE) 
         && column != 0 && row != 0 && column != cap && row != cap) {
       if (this.turn) {
         this.board.get(column).get(row).color = this.p1Color;
@@ -174,7 +174,7 @@ class BridgItWorld extends World {
 
       this.turn = !this.turn;
     }
-
+    
     this.makeScene();
   }
 
@@ -250,22 +250,12 @@ class BridgItWorld extends World {
 
 // examples and tests
 class ExamplesBridgIt {
-  BridgItWorld w = new BridgItWorld(21);
-  Posn origin = new Posn(0, 0);
-  Posn x1y0 = new Posn(this.w.CELL_SIZE, 0);
-  Posn x0y1 = new Posn(0, this.w.CELL_SIZE);
-  Cell cellOne = new Cell(this.origin, Color.WHITE);
-  Cell cellTwo = new Cell(this.x0y1, Color.RED);
-  Cell cellThree = new Cell(this.x1y0, Color.BLUE);
+  BridgItWorld w = new BridgItWorld(5);
 
   // initialize the data
   void initData() {
-    this.w = new BridgItWorld(5); // to play on bigger board, change this value of 5; 5 is used for
-                                  // tests
+    this.w = new BridgItWorld(5);
     this.w.initialize();
-    cellOne = new Cell(this.origin, Color.WHITE);
-    cellTwo = new Cell(this.x0y1, Color.RED);
-    cellThree = new Cell(this.x1y0, Color.BLUE);
   }
 
   // displays the game
@@ -303,7 +293,26 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
     t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
     t.checkExpect(this.w.turn, true);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 5 / 2));
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, false);
+    this.w.onKeyEvent("r");
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, true);
+  }
+  
+  // test onKeyEvent method
+  void testOnKeyEvent(Tester t) {
+    this.initData();
+    t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
+    t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
+    t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
+    t.checkExpect(this.w.turn, true);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
     t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
@@ -325,14 +334,15 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.turn, true);
   }
 
+  // test onMouseClicked method
   void testOnMouseClicked(Tester t) {
     this.initData();
     // ------------ Checking red switch on click ------------
-    //   0 1 2 3
-    // 0 W B W B
-    // 1 R W R W
-    // 2 W B W B
-    // 3 R W R W
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  W  B
+    //  3  R  W  R  W
     // (2,2) is white, (2,1) and (2,3) are red, none have any neighbors, p1 turn
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(2).get(2).color, Color.WHITE);
@@ -341,12 +351,12 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(2).get(2).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(2).get(3).neighbors.size(), 0);
     t.checkExpect(this.w.turn, true);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 5 / 2));
-    //   0 1 2 3
-    // 0 W B W B
-    // 1 R W R W
-    // 2 W B R B
-    // 3 R W R W
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  R  B
+    //  3  R  W  R  W
     // all now red, (2,1) and (2,3) have 1 neighbor, (2,2) hasa 2 neighbors, p2 turn
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
@@ -355,21 +365,21 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(2).get(2).neighbors.size(), 2);
     t.checkExpect(this.w.board.get(2).get(3).neighbors.size(), 1);
     t.checkExpect(this.w.turn, false);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 5 / 2));
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
     // mouse click on turned red square does nothing
     t.checkExpect(this.w.board.get(2).get(2).color, Color.RED);
     t.checkExpect(this.w.turn, false);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5 / 2, w.CELL_SIZE * 7 / 2));
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 7/2));
     // mouse click on initialized red square does nothing
     t.checkExpect(this.w.board.get(2).get(3).color, Color.RED);
     t.checkExpect(this.w.turn, false);
-
+    
     // ------------ Checking blue switch on click ------------
-    //   0 1 2 3
-    // 0 W B W B
-    // 1 R W R W
-    // 2 W B R B
-    // 3 R W R W
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  R  B
+    //  3  R  W  R  W
     // (1,1) is white, (1,0) and (1,2) are blue, none have any neighbors
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
@@ -377,12 +387,12 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(0).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 0);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3 / 2, w.CELL_SIZE * 3 / 2));
-    //   0 1 2 3
-    // 0 W B W B
-    // 1 R B R W
-    // 2 W B R B
-    // 3 R W R W
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  B  R  W
+    //  2  W  B  R  B
+    //  3  R  W  R  W
     // (1,1) now blue and 2 neighbors, (1,0) and (1,2) 1 neighbors, p1 turn
     t.checkExpect(this.w.board.get(1).get(0).color, Color.BLUE);
     t.checkExpect(this.w.board.get(1).get(1).color, Color.BLUE);
@@ -391,17 +401,18 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
     t.checkExpect(this.w.board.get(1).get(2).neighbors.size(), 1);
     t.checkExpect(this.w.turn, true);
-
+    
     // ------------ Checking no click on edges ------------
     t.checkExpect(this.w.board.get(0).get(0).color, Color.WHITE);
     this.w.onMouseClicked(new Posn(0, 0));
     t.checkExpect(this.w.turn, true);
     t.checkExpect(this.w.board.get(4).get(4).color, Color.WHITE);
-    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 9 / 2, w.CELL_SIZE * 9 / 2));
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 9/2, w.CELL_SIZE * 9/2));
     t.checkExpect(this.w.turn, true);
     t.checkExpect(this.w.board.get(4).get(4).color, Color.WHITE);
   }
-
+  
+  // test addNeighbor method
   void testAddNeighbor(Tester t) {
     this.initData();
     // (0,0) is white and has no neighbors, (0,1) is red and has no neights)
@@ -415,14 +426,15 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(0).neighbors.size(), 1);
     t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
   }
-
+  
+  // test editNeighbors method
   void testEditNeighbors(Tester t) {
     this.initData();
-    //   0 1 2 3
-    // 0 W B W B
-    // 1 R W R W
-    // 2 W B W B
-    // 3 R W R W
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  W  B  W  B
+    //  3  R  W  R  W
     t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(0).get(2).neighbors.size(), 0);
@@ -430,12 +442,12 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(0).get(3).neighbors.size(), 0);
     t.checkExpect(this.w.board.get(0).get(3).color, Color.RED);
     this.w.board.get(0).get(2).color = Color.RED;
-    // 0 1 2 3
-    // 0 W B W B
-    // 1 R W R W
-    // 2 W B W B
-    // 3 R W R W
-    this.w.editNeighbors(0, 2);
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  W  R  W
+    //  2  R  B  W  B
+    //  3  R  W  R  W
+    this.w.editNeighbors(0,2);
     t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 1);
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(0).get(2).neighbors.size(), 2);
@@ -445,12 +457,12 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(1).get(1).color, Color.WHITE);
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 0);
     this.w.board.get(1).get(1).color = Color.RED;
-    //   0 1 2 3
-    // 0 W B W B
-    // 1 R R R W
-    // 2 W B W B
-    // 3 R W R W
-    this.w.editNeighbors(1, 1);
+    //     0  1  2  3
+    //  0  W  B  W  B
+    //  1  R  R  R  W
+    //  2  R  B  W  B
+    //  3  R  W  R  W
+    this.w.editNeighbors(1,1);
     t.checkExpect(this.w.board.get(0).get(1).neighbors.size(), 2);
     t.checkExpect(this.w.board.get(0).get(1).color, Color.RED);
     t.checkExpect(this.w.board.get(1).get(1).neighbors.size(), 2);
@@ -459,6 +471,71 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
   }
   
+  // test wonHelp method
+  void testWonHelp(Tester t) {
+    this.initData();
+    //     0  1  2  3  4
+    //  0  W  B  W  B  W
+    //  1  R  W  R  W  R
+    //  2  W  B  W  B  W
+    //  3  R  W  R  W  R
+    //  4  W  B  W  B  W
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    this.w.wonHelp(this.w.board.get(0).get(1), reached);
+    t.checkExpect(reached.size(), 0);
+    reached.clear();
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    this.w.wonHelp(this.w.board.get(0).get(1), reached);
+    t.checkExpect(reached.size(), 3);
+    reached.clear();
+    this.w.turn = true;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 7/2, w.CELL_SIZE * 3/2));
+    this.w.wonHelp(this.w.board.get(0).get(1), reached);
+    t.checkExpect(reached.size(), 5);
+  }
+  
+  // test p1Won method
+  void testP1Won(Tester t) {
+    this.initData();
+    //     0  1  2  3  4
+    //  0  W  B  W  B  W
+    //  1  R  W  R  W  R
+    //  2  W  B  W  B  W
+    //  3  R  W  R  W  R
+    //  4  W  B  W  B  W
+    t.checkExpect(this.w.p1Won(), false);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    t.checkExpect(this.w.p1Won(), false);
+    this.w.turn = true;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 7/2, w.CELL_SIZE * 7/2));
+    t.checkExpect(this.w.p1Won(), false);
+    this.w.turn = true;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    t.checkExpect(this.w.p1Won(), true);
+  }
+  
+  // test p2Won method
+  void testP2Won(Tester t) {
+    this.initData();
+    //     0  1  2  3  4
+    //  0  W  B  W  B  W
+    //  1  R  W  R  W  R
+    //  2  W  B  W  B  W
+    //  3  R  W  R  W  R
+    //  4  W  B  W  B  W
+    t.checkExpect(this.w.p2Won(), false);
+    this.w.turn = false;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    t.checkExpect(this.w.p2Won(), false);
+    this.w.turn = false;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 7/2, w.CELL_SIZE * 7/2));
+    t.checkExpect(this.w.p2Won(), false);
+    this.w.turn = false;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    t.checkExpect(this.w.p2Won(), true);
+  }
+  
+  // test makeScene method
   void testMakeScene(Tester t) {
     this.initData();
     //   0 1 2 3 4
@@ -480,45 +557,53 @@ class ExamplesBridgIt {
     // ...does nothing
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
-    // clicking cell (1, 0)... 
-    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE / 2));
+    // clicking cell (1, 0)...
+    this.w
+        .onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE / 2));
     // ...does nothing
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
-    // clicking cell (0, 1)... 
-    this.w.onMouseClicked(new Posn((this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
+    // clicking cell (0, 1)...
+    this.w.onMouseClicked(
+        new Posn((this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
     // ...does nothing
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
     // clicking cell (4, 4)...
-    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
     // ...does nothing
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
-    // clicking cell (2, 4)... 
-    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // clicking cell (2, 4)...
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        (4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
     // ...does nothing
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
-    // clicking cell (4, 3)... 
-    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    // clicking cell (4, 3)...
+    this.w.onMouseClicked(new Posn((4 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
     // ...does nothing
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
 
     // --------------- if middle cells are clicked --------------
     // clicking cell (2, 1)...
-    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
     // ... does nothing because it's red, not white
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
     // clicking cell (3, 2)...
-    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
     // ... does nothing because it's blue, not white
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, true);
     // clicking cell (1, 1)...
-    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2), this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
+    this.w.onMouseClicked(new Posn(this.w.CELL_SIZE + (this.w.CELL_SIZE / 2),
+        this.w.CELL_SIZE + (this.w.CELL_SIZE / 2)));
     // ...changes (1, 1) to red, switches player turn to player 2
     t.checkExpect(this.w.makeScene().equals(oldScene), false);
     t.checkExpect(this.w.turn, false);
@@ -531,19 +616,40 @@ class ExamplesBridgIt {
     // 3 R W R W R
     // 4 W B W B W
     // clicking cell (2, 1)...
-    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
+    this.w.onMouseClicked(new Posn((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        (this.w.CELL_SIZE + (this.w.CELL_SIZE / 2))));
     // ... does nothing because it's red, not white
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, false);
     // clicking cell (3, 2)...
-    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        ((2 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2))));
     // ... does nothing because it's blue, not white
     t.checkExpect(this.w.makeScene().equals(oldScene), true);
     t.checkExpect(this.w.turn, false);
     // clicking cell (3, 3)...
-    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2), (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
+    this.w.onMouseClicked(new Posn((3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2),
+        (3 * this.w.CELL_SIZE) + (this.w.CELL_SIZE / 2)));
     // ...changes (3, 3) to blue, switches player turn to player 1
     t.checkExpect(this.w.makeScene().equals(oldScene), false);
     t.checkExpect(this.w.turn, true);
+  }
+  
+  // test lastScene method
+  void testLastScene(Tester t) {
+    this.initData();
+    WorldScene s = this.w.makeScene();
+    WorldScene sText1 = s;
+    WorldScene sTextP1 = s;
+    WorldScene sTextP2 = s;
+    sText1.placeImageXY(new TextImage("HELLO!", this.w.boardLength / 10, Color.BLACK),
+        this.w.boardLength / 2, this.w.boardLength / 2);
+    sTextP1.placeImageXY(new TextImage("PLAYER 1 WON!", this.w.boardLength / 10, Color.BLACK),
+        this.w.boardLength / 2, this.w.boardLength / 2);
+    sTextP2.placeImageXY(new TextImage("PLAYER 2 WON!", this.w.boardLength / 10, Color.BLACK),
+        this.w.boardLength / 2, this.w.boardLength / 2);
+    t.checkExpect(this.w.lastScene("HELLO!", s), sText1);
+    t.checkExpect(this.w.lastScene("PLAYER 1 WON!", s), sTextP1);
+    t.checkExpect(this.w.lastScene("PLAYER 2 WON!", s), sTextP2);
   }
 }
