@@ -476,6 +476,67 @@ class ExamplesBridgIt {
     t.checkExpect(this.w.board.get(2).get(1).color, Color.RED);
   }
   
+  void testWonHelp(Tester t) {
+    this.initData();
+    //     0  1  2  3  4
+    //  0  W  B  W  B  W
+    //  1  R  W  R  W  R
+    //  2  W  B  W  B  W
+    //  3  R  W  R  W  R
+    //  4  W  B  W  B  W
+    ArrayList<Cell> reached = new ArrayList<Cell>();
+    this.w.wonHelp(this.w.board.get(0).get(1), reached);
+    t.checkExpect(reached.size(), 0);
+    reached.clear();
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    this.w.wonHelp(this.w.board.get(0).get(1), reached);
+    t.checkExpect(reached.size(), 3);
+    reached.clear();
+    this.w.turn = true;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 7/2, w.CELL_SIZE * 3/2));
+    this.w.wonHelp(this.w.board.get(0).get(1), reached);
+    t.checkExpect(reached.size(), 5);
+  }
+  
+  void testP1Won(Tester t) {
+    this.initData();
+    //     0  1  2  3  4
+    //  0  W  B  W  B  W
+    //  1  R  W  R  W  R
+    //  2  W  B  W  B  W
+    //  3  R  W  R  W  R
+    //  4  W  B  W  B  W
+    t.checkExpect(this.w.p1Won(), false);
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    t.checkExpect(this.w.p1Won(), false);
+    this.w.turn = true;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 7/2, w.CELL_SIZE * 7/2));
+    t.checkExpect(this.w.p1Won(), false);
+    this.w.turn = true;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    t.checkExpect(this.w.p1Won(), true);
+  }
+  
+  void testP2Won(Tester t) {
+    this.initData();
+    //     0  1  2  3  4
+    //  0  W  B  W  B  W
+    //  1  R  W  R  W  R
+    //  2  W  B  W  B  W
+    //  3  R  W  R  W  R
+    //  4  W  B  W  B  W
+    t.checkExpect(this.w.p2Won(), false);
+    this.w.turn = false;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 3/2, w.CELL_SIZE * 3/2));
+    t.checkExpect(this.w.p2Won(), false);
+    this.w.turn = false;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 7/2, w.CELL_SIZE * 7/2));
+    t.checkExpect(this.w.p2Won(), false);
+    this.w.turn = false;
+    this.w.onMouseClicked(new Posn(w.CELL_SIZE * 5/2, w.CELL_SIZE * 5/2));
+    t.checkExpect(this.w.p2Won(), true);
+  }
+  
   
 
 }
